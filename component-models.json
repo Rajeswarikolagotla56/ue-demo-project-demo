@@ -5,20 +5,19 @@
       "id": "hero",
       "fields": [
         {
-          "component": "text",
+          "component": "richtext",
           "name": "title",
           "label": "Title",
           "valueType": "string"
         },
         {
-          "component": "text",
+          "component": "richtext",
           "name": "description",
           "label": "Description",
-          "valueType": "string",
-          "multi": true
+          "valueType": "string"
         },
         {
-          "component": "reference",
+          "component": "media",
           "name": "image",
           "label": "Image",
           "valueType": "string"
@@ -30,15 +29,45 @@
       "id": "cards",
       "fields": [
         {
-          "component": "text",
+          "component": "richtext",
           "name": "title",
           "label": "Card Title",
           "valueType": "string"
         },
         {
-          "component": "text",
+          "component": "richtext",
           "name": "description",
           "label": "Card Text",
+          "valueType": "string"
+        },
+        {
+          "component": "media",
+          "name": "image",
+          "label": "Card Image",
+          "valueType": "string"
+        }
+      ]
+    },
+    {
+      "title": "Columns",
+      "id": "columns",
+      "fields": [
+        {
+          "component": "richtext",
+          "name": "title",
+          "label": "Column Title",
+          "valueType": "string"
+        },
+        {
+          "component": "richtext",
+          "name": "description",
+          "label": "Column Text",
+          "valueType": "string"
+        },
+        {
+          "component": "media",
+          "name": "image",
+          "label": "Column Image",
           "valueType": "string"
         }
       ]

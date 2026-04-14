@@ -23,23 +23,37 @@ if (window.location.hostname.endsWith('.aem.page') || window.location.hostname =
   window.addEventListener('message', (event) => {
     const { type, detail } = event.data || {};
 
-    // Handle content fetch — return current DOM value
+    // Handle content fetch — return current DOM value or specific props
     if (type === 'ue:get') {
       const { resource, prop } = detail || {};
-      const el = document.querySelector(`[data-aue-prop="${prop}"]`);
-      const value = el ? el.textContent : '';
+      const el = document.querySelector(`[data-aue-resource="${resource}"] [data-aue-prop="${prop}"], [data-aue-prop="${prop}"]`);
+      let value = '';
+      if (el) {
+        if (el.tagName === 'IMG') value = el.src;
+        else value = el.textContent;
+      }
       event.source?.postMessage({ type: 'ue:get:response', id: event.data.id, data: { [prop]: value } }, '*');
     }
 
     // Handle content update — apply to DOM and confirm success
     if (type === 'ue:patch' || type === 'aue:content:update') {
-      const { resource, prop, value, type: patchType, content } = detail || {};
-      const updates = content || [{ prop, value }];
-      updates.forEach(({ prop: p, value: v }) => {
-        const el = document.querySelector(`[data-aue-prop="${p}"]`);
+      const { resource, prop, value, detail: innerDetail } = detail || {};
+      const updates = (innerDetail && innerDetail.content) || (detail && detail.content) || [{ prop, value }];
+      
+      updates.forEach((update) => {
+        const p = update.prop;
+        const v = update.value;
+        // Search globally or within the resource
+        const el = document.querySelector(`[data-aue-resource="${resource}"] [data-aue-prop="${p}"], [data-aue-prop="${p}"]`);
         if (el) {
-          if (el.tagName === 'IMG') el.src = v;
-          else el.textContent = v;
+          if (el.tagName === 'IMG') {
+            el.src = v;
+          } else if (el.tagName === 'PICTURE') {
+            const img = el.querySelector('img');
+            if (img) img.src = v;
+          } else {
+            el.textContent = v;
+          }
         }
       });
       event.source?.postMessage({ type: 'ue:patch:response', id: event.data.id, status: 'ok' }, '*');
@@ -119,12 +133,24 @@ function buildAutoBlocks() {
  */
 // eslint-disable-next-line import/prefer-default-export
 export function decorateMain(main) {
+  // --- Universal Editor instrumentation for Page level ---
+  main.setAttribute('data-aue-resource', 'urn:aemconnection:/content/ue-demo-project-demo/jcr:content/root/container');
+  main.setAttribute('data-aue-type', 'container');
+  main.setAttribute('data-aue-label', 'Main Content');
+
   // hopefully forward compatible button decoration
   decorateButtons(main);
   decorateIcons(main);
   buildAutoBlocks(main);
   decorateSections(main);
   decorateBlocks(main);
+
+  // Instrument each section
+  [...main.querySelectorAll('.section')].forEach((section, index) => {
+    section.setAttribute('data-aue-resource', `urn:aemconnection:/content/ue-demo-project-demo/jcr:content/root/container/section${index}`);
+    section.setAttribute('data-aue-type', 'container');
+    section.setAttribute('data-aue-label', `Section ${index + 1}`);
+  });
 }
 
 /**

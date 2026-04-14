@@ -42,6 +42,14 @@ export default function decorate(block) {
           desc.setAttribute('data-aue-label', `Card ${index + 1} Text`);
         }
       }
+      // Instrument the image within the card
+      const img = div.querySelector('picture, img');
+      if (img) {
+        img.setAttribute('data-aue-resource', `urn:aemconnection:/content/ue-demo-project-demo/jcr:content/root/container/cards/item${index}`);
+        img.setAttribute('data-aue-prop', 'image');
+        img.setAttribute('data-aue-type', 'media');
+        img.setAttribute('data-aue-label', `Card ${index + 1} Image`);
+      }
     });
     ul.append(li);
   });
