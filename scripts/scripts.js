@@ -14,9 +14,44 @@ import {
 
 // Load Universal Editor on .aem.page (preview) and localhost
 if (window.location.hostname.endsWith('.aem.page') || window.location.hostname === 'localhost') {
+  // Monkey-patch fetch to bypass AEM 404s for the demo
+  const originalFetch = window.fetch;
+  window.fetch = function (...args) {
+    const url = typeof args[0] === 'string' ? args[0] : args[0].url;
+    if (url.includes('jcr:content.json')) {
+      console.log('Mocking UE fetch:', url);
+      return Promise.resolve(new Response(JSON.stringify({
+        ':type': 'container',
+        'jcr:primaryType': 'nt:unstructured',
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }));
+    }
+    return originalFetch.apply(this, args);
+  };
+
+  // Monkey-patch XMLHttpRequest too
+  const originalOpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function (method, url) {
+    if (typeof url === 'string' && url.includes('jcr:content.json')) {
+      Object.defineProperty(this, 'status', { writable: true });
+      Object.defineProperty(this, 'responseText', { writable: true });
+      Object.defineProperty(this, 'readyState', { writable: true });
+      this.status = 200;
+      this.responseText = JSON.stringify({ ':type': 'container', 'jcr:primaryType': 'nt:unstructured' });
+      this.readyState = 4;
+      this.onreadystatechange?.();
+      this.onload?.();
+      return; 
+    }
+    return originalOpen.apply(this, arguments);
+  };
+
   const script = document.createElement('script');
   script.src = '/universal-editor-cors.js';
   document.head.appendChild(script);
+
 
   // Mock backend: intercept Universal Editor postMessage events and handle locally
   // This allows UE editing to work without a real AEM JCR backend.
