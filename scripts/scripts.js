@@ -75,7 +75,6 @@ if (window.location.hostname.endsWith('.aem.page') || window.location.hostname =
       event.source?.postMessage({ type: 'ue:patch:response', id: event.data.id, status: 'ok' }, '*');
       event.source?.postMessage({ type: 'aue:content:updated', detail: { resource, prop } }, '*');
     }
-    }
 
     // Handle connection check
     if (type === 'ue:ping') {
